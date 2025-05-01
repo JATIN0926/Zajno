@@ -5,13 +5,19 @@ import LocomotiveScroll from "locomotive-scroll";
 import gsap from "gsap";
 const locomotiveScroll = new LocomotiveScroll();
 
+let hoveredPlane = null;
+let quickHover = null;
+let quickMouseX = null;
+let quickMouseY = null;
+
 // Check if window width is desktop size
 const isDesktop = window.innerWidth >= 1024;
 
 if (isDesktop) {
   const scene = new THREE.Scene();
   const distance = 20;
-  const fov = 2 * Math.atan(window.innerHeight / 2 / distance) * (180 / Math.PI);
+  const fov =
+    2 * Math.atan(window.innerHeight / 2 / distance) * (180 / Math.PI);
   const camera = new THREE.PerspectiveCamera(
     fov,
     window.innerWidth / window.innerHeight,
@@ -82,7 +88,7 @@ if (isDesktop) {
 
   window.addEventListener("resize", () => {
     const newFov =
-      2 * Math.atan((window.innerHeight / 2) / distance) * (180 / Math.PI);
+      2 * Math.atan(window.innerHeight / 2 / distance) * (180 / Math.PI);
     camera.fov = newFov;
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -95,32 +101,56 @@ if (isDesktop) {
     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-
     const intersects = raycaster.intersectObjects(planes);
 
-    planes.forEach((plane) => {
-      gsap.to(plane.material.uniforms.uHover, {
-        value: 0,
-        duration: 0.3,
-      });
-    });
-
     if (intersects.length > 0) {
-      const intersectedPlane = intersects[0];
-      const uv = intersectedPlane.uv;
-      gsap.to(intersectedPlane.object.material.uniforms.uMouse.value, {
-        x: uv.x,
-        y: uv.y,
-        duration: 0.3,
-      });
-      gsap.to(intersectedPlane.object.material.uniforms.uHover, {
-        value: 1,
-        duration: 0.3,
-      });
+      const intersectedPlane = intersects[0].object;
+
+      if (hoveredPlane !== intersectedPlane) {
+        if (hoveredPlane) {
+          quickHover(0);
+        }
+
+        hoveredPlane = intersectedPlane;
+        quickHover = gsap.quickTo(
+          hoveredPlane.material.uniforms.uHover,
+          "value",
+          {
+            duration: 0.4,
+            ease: "power2.out",
+          }
+        );
+
+        quickMouseX = gsap.quickTo(
+          hoveredPlane.material.uniforms.uMouse.value,
+          "x",
+          {
+            duration: 0.4,
+            ease: "power2.out",
+          }
+        );
+
+        quickMouseY = gsap.quickTo(
+          hoveredPlane.material.uniforms.uMouse.value,
+          "y",
+          {
+            duration: 0.4,
+            ease: "power2.out",
+          }
+        );
+      }
+
+      const uv = intersects[0].uv;
+      quickMouseX(uv.x);
+      quickMouseY(uv.y);
+      quickHover(1);
+    } else if (hoveredPlane) {
+      quickHover(0);
+      hoveredPlane = null;
     }
   });
 } else {
-    document.getElementById("canvas").style.display = 'none'
+  document.getElementById("canvas").style.display = "none";
   const images = document.querySelectorAll("img");
   images.forEach((image) => {
     image.style.opacity = 1;
