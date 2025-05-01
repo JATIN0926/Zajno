@@ -3,6 +3,7 @@ import vertexShader from "../shaders/vertexShader.glsl";
 import fragmentShader from "../shaders/fragmentShader.glsl";
 import LocomotiveScroll from "locomotive-scroll";
 import gsap from "gsap";
+
 const locomotiveScroll = new LocomotiveScroll();
 
 let hoveredPlane = null;
@@ -37,7 +38,15 @@ if (isDesktop) {
   const mouse = new THREE.Vector2();
   const images = document.querySelectorAll("img");
   const planes = [];
-  images.forEach((image) => {
+  const tintColors = [
+    new THREE.Color(0.95, 0.75, 0.75), // blush pink
+    new THREE.Color(0.85, 0.9, 1.0), // soft baby blue
+    new THREE.Color(0.8, 0.85, 1.0), // pale blue
+    new THREE.Color(1.0, 0.95, 0.8), // creamy yellow
+    new THREE.Color(0.9, 0.8, 1.0), // soft violet
+  ];
+
+  images.forEach((image, index) => {
     const imgBounds = image.getBoundingClientRect();
     const texture = new THREE.TextureLoader().load(image.src);
     const material = new THREE.ShaderMaterial({
@@ -51,6 +60,7 @@ if (isDesktop) {
         uHover: {
           value: 0,
         },
+        uColor: { value: tintColors[index % tintColors.length] },
       },
       vertexShader,
       fragmentShader,
