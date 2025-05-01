@@ -7,9 +7,9 @@ import gsap from "gsap";
 const locomotiveScroll = new LocomotiveScroll({
   el: document.querySelector(".main"),
   smooth: true,
-  smoothMobile: true, 
-  lerp: 0.05, 
-  class: "is-inview", 
+  smoothMobile: true,
+  lerp: 0.05,
+  class: "is-inview",
 });
 
 let hoveredPlane = null;
@@ -17,7 +17,6 @@ let quickHover = null;
 let quickMouseX = null;
 let quickMouseY = null;
 
-// Check if window width is desktop size
 const isDesktop = window.innerWidth >= 1024;
 
 if (isDesktop) {
@@ -42,6 +41,52 @@ if (isDesktop) {
 
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
+
+  const loaderEl = document.getElementById("loader");
+  const loaderPercentage = document.getElementById("loader-percentage");
+
+  const manager = new THREE.LoadingManager();
+
+  let actualProgress = 0;
+  let displayProgress = { value: 0 };
+  let assetsLoaded = false;
+  let threeSecondsPassed = false;
+
+  const updateDisplay = () => {
+    loaderPercentage.innerText = `${Math.round(displayProgress.value)}%`;
+  };
+
+  gsap.to(displayProgress, {
+    value: 100,
+    duration: 3,
+    ease: "power1.out",
+    onUpdate: updateDisplay,
+    onComplete: () => {
+      threeSecondsPassed = true;
+      if (assetsLoaded) hideLoader();
+    },
+  });
+
+  manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+    actualProgress = Math.round((itemsLoaded / itemsTotal) * 100);
+  };
+
+  manager.onLoad = () => {
+    assetsLoaded = true;
+    if (threeSecondsPassed) hideLoader();
+  };
+
+  function hideLoader() {
+    gsap.to(loaderEl, {
+      y: "100%",
+      duration: 1,
+      ease: "power4.inOut",
+      onComplete: () => {
+        loaderEl.style.display = "none";
+      },
+    });
+  }
+
   const images = document.querySelectorAll("img");
   const planes = [];
   const tintColors = [
@@ -54,7 +99,7 @@ if (isDesktop) {
 
   images.forEach((image, index) => {
     const imgBounds = image.getBoundingClientRect();
-    const texture = new THREE.TextureLoader().load(image.src);
+    const texture = new THREE.TextureLoader(manager).load(image.src);
     const material = new THREE.ShaderMaterial({
       uniforms: {
         uTexture: {
@@ -173,4 +218,3 @@ if (isDesktop) {
   });
 }
 
-// locomotiveScroll.on("scroll", updatePlanePosition);
