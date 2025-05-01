@@ -4,7 +4,13 @@ import fragmentShader from "../shaders/fragmentShader.glsl";
 import LocomotiveScroll from "locomotive-scroll";
 import gsap from "gsap";
 
-const locomotiveScroll = new LocomotiveScroll();
+const locomotiveScroll = new LocomotiveScroll({
+  el: document.querySelector(".main"),
+  smooth: true,
+  smoothMobile: true, 
+  lerp: 0.05, 
+  class: "is-inview", 
+});
 
 let hoveredPlane = null;
 let quickHover = null;
